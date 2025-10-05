@@ -191,7 +191,7 @@ const BlogCard = ({
                 <h3 className="text-base sm:text-lg font-bold text-base-content truncate">
                   {loading
                     ? skeleton({ widthCls: 'w-28', heightCls: 'h-8' })
-                    : 'Medium Blog'}
+                    : 'Medium Posts'}
                 </h3>
                 <div className="text-base-content/60 text-xs sm:text-sm mt-1 truncate">
                   {loading
