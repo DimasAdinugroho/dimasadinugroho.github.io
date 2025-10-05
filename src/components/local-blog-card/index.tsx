@@ -1,42 +1,66 @@
 import { useEffect, useState } from 'react';
-import LazyImage from '../lazy-image';
+import { Link } from 'react-router-dom';
 import { PiNewspaper } from 'react-icons/pi';
-import { getDevPost, getMediumPost } from '@arifszn/blog-js';
 import { formatDistance } from 'date-fns';
-import { SanitizedBlog } from '../../interfaces/sanitized-config';
-import { ga, skeleton } from '../../utils';
-import { Article } from '../../interfaces/article';
+import { skeleton } from '../../utils';
 
-const BlogCard = ({
+interface BlogPost {
+  slug: string;
+  title: string;
+  date: string;
+  excerpt: string;
+}
+
+const LocalBlogCard = ({
   loading,
-  blog,
   googleAnalyticsId,
 }: {
   loading: boolean;
-  blog: SanitizedBlog;
   googleAnalyticsId?: string;
 }) => {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
-    if (blog.source === 'medium') {
-      getMediumPost({
-        user: blog.username,
-      }).then((res) => {
-        setArticles(res);
-      });
-    } else if (blog.source === 'dev') {
-      getDevPost({
-        user: blog.username,
-      }).then((res) => {
-        setArticles(res);
-      });
-    }
-  }, [blog.source, blog.username]);
+    const importPosts = async () => {
+      const modules = import.meta.glob('/src/blog/*.md', { as: 'raw' });
+      const posts: BlogPost[] = [];
+
+      for (const path in modules) {
+        const content = await modules[path]();
+        const slug = path.split('/').pop()?.replace('.md', '') || '';
+        const frontmatter = extractFrontmatter(content);
+
+        posts.push({
+          slug,
+          title: frontmatter.title || slug,
+          date: frontmatter.date || '',
+          excerpt: frontmatter.excerpt || ''
+        });
+      }
+
+      setPosts(posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    };
+
+    importPosts();
+  }, []);
+
+  const extractFrontmatter = (content: string) => {
+    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!match) return {};
+
+    const frontmatter: any = {};
+    match[1].split('\n').forEach(line => {
+      const [key, ...value] = line.split(':');
+      if (key && value.length) {
+        frontmatter[key.trim()] = value.join(':').trim().replace(/['"]/g, '');
+      }
+    });
+    return frontmatter;
+  };
 
   const renderSkeleton = () => {
     const array = [];
-    for (let index = 0; index < blog.limit; index++) {
+    for (let index = 0; index < 5; index++) {
       array.push(
         <div className="card shadow-md card-sm bg-base-100" key={index}>
           <div className="p-8 h-full w-full">
@@ -72,13 +96,6 @@ const BlogCard = ({
                         className: 'mx-auto md:mx-0',
                       })}
                     </div>
-                    <div className="mt-4 flex items-center flex-wrap justify-center md:justify-start">
-                      {skeleton({
-                        widthCls: 'w-32',
-                        heightCls: 'h-4',
-                        className: 'md:mr-2 mx-auto md:mx-0',
-                      })}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -87,84 +104,49 @@ const BlogCard = ({
         </div>,
       );
     }
-
     return array;
   };
 
-  const renderArticles = () => {
-    return articles && articles.length ? (
-      articles.slice(0, blog.limit).map((article, index) => (
-        <a
-          className="card shadow-md card-sm bg-base-100 cursor-pointer"
+  const renderBlogs = () => {
+    return posts && posts.length ? (
+      posts.slice(0, 5).map((post, index) => (
+        <Link
+          className="card shadow-md card-sm bg-base-100 cursor-pointer hover:shadow-lg transition-shadow"
           key={index}
-          href={article.link}
-          onClick={(e) => {
-            e.preventDefault();
-
-            try {
-              if (googleAnalyticsId) {
-                ga.event('Click Blog Post', {
-                  post: article.title,
-                });
-              }
-            } catch (error) {
-              console.error(error);
-            }
-
-            window?.open(article.link, '_blank');
-          }}
+          to={`/blog/${post.slug}`}
         >
           <div className="p-8 h-full w-full">
             <div className="flex items-center flex-col md:flex-row">
-              <div className="avatar mb-5 md:mb-0 opacity-90">
-                <div className="w-24 h-24 mask mask-squircle">
-                  <LazyImage
-                    src={article.thumbnail}
-                    alt={'thumbnail'}
-                    placeholder={skeleton({
-                      widthCls: 'w-full',
-                      heightCls: 'h-full',
-                      shape: '',
-                    })}
-                  />
-                </div>
-              </div>
               <div className="w-full">
                 <div className="flex items-start px-4">
                   <div className="text-center md:text-left w-full">
                     <h2 className="font-medium text-base-content opacity-60">
-                      {article.title}
+                      {post.title}
                     </h2>
-                    <p className="text-base-content opacity-50 text-xs">
-                      {formatDistance(article.publishedAt, new Date(), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                    <p className="mt-3 text-base-content text-sm">
-                      {article.description}
-                    </p>
-                    <div className="mt-4 flex items-center flex-wrap justify-center md:justify-start">
-                      {article.categories.map((category, index2) => (
-                        <div
-                          className="py-2 px-4 text-xs leading-3 rounded-full bg-base-300 mr-1 mb-1 opacity-50 text-base-content"
-                          key={index2}
-                        >
-                          #{category}
-                        </div>
-                      ))}
-                    </div>
+                    {post.date && (
+                      <p className="text-base-content opacity-50 text-xs">
+                        {formatDistance(new Date(post.date), new Date(), {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    )}
+                    {post.excerpt && (
+                      <p className="mt-3 text-base-content text-sm">
+                        {post.excerpt}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </a>
+        </Link>
       ))
     ) : (
       <div className="text-center mb-6">
         <PiNewspaper className="mx-auto h-12 w-12 opacity-30" />
         <p className="mt-1 text-sm opacity-50 text-base-content">
-          No recent post
+          No blog posts found
         </p>
       </div>
     );
@@ -191,7 +173,7 @@ const BlogCard = ({
                 <h3 className="text-base sm:text-lg font-bold text-base-content truncate">
                   {loading
                     ? skeleton({ widthCls: 'w-28', heightCls: 'h-8' })
-                    : 'Medium Blog'}
+                    : 'Blog Posts'}
                 </h3>
                 <div className="text-base-content/60 text-xs sm:text-sm mt-1 truncate">
                   {loading
@@ -200,9 +182,12 @@ const BlogCard = ({
                 </div>
               </div>
             </div>
+            <Link to="/blog" className="btn btn-outline btn-sm">
+              View All
+            </Link>
           </div>
           <div className="grid grid-cols-1 gap-6">
-            {loading || !articles ? renderSkeleton() : renderArticles()}
+            {loading ? renderSkeleton() : renderBlogs()}
           </div>
         </div>
       </div>
@@ -210,4 +195,4 @@ const BlogCard = ({
   );
 };
 
-export default BlogCard;
+export default LocalBlogCard;

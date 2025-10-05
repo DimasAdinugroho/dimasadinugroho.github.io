@@ -20,7 +20,7 @@ const BlogPost = () => {
       try {
         const module = await import(`/src/blog/${slug}.md?raw`);
         const rawContent = module.default;
-        
+
         const match = rawContent.match(/^---\n([\s\S]*?)\n---([\s\S]*)$/);
         if (match) {
           const fm: any = {};
@@ -65,52 +65,66 @@ const BlogPost = () => {
                   <Link to="/blog" className="btn btn-outline btn-sm">← Back to Blog</Link>
                   <Link to="/" className="btn btn-ghost btn-sm">Home</Link>
                 </div>
-                
+
                 <header className="mb-8">
                   <h1 className="text-4xl font-bold mb-2">
                     {frontmatter.title || slug}
                   </h1>
                   {frontmatter.date && (
                     <time className="text-base-content/70">
-                      {frontmatter.date}
+                      Date: {frontmatter.date}
                     </time>
                   )}
+                  {frontmatter.tags && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {frontmatter.tags.split(',').map((tag: string, index: number) => (
+                        <span key={index} className="badge badge-outline badge-sm">
+                          {tag.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {frontmatter.excerpt && (
+                    <p className="text-lg text-base-content/80 mt-4 italic">
+                      {frontmatter.excerpt}
+                    </p>
+                  )}
                 </header>
-                
+
                 <div className="markdown-content">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkMath]}
                     rehypePlugins={[rehypeKatex, rehypeHighlight]}
                     components={{
-                      h1: ({children}) => <h1 className="text-3xl font-bold mt-8 mb-4 text-base-content">{children}</h1>,
-                      h2: ({children}) => <h2 className="text-2xl font-bold mt-6 mb-3 text-base-content">{children}</h2>,
-                      h3: ({children}) => <h3 className="text-xl font-bold mt-4 mb-2 text-base-content">{children}</h3>,
-                      h4: ({children}) => <h4 className="text-lg font-bold mt-3 mb-2 text-base-content">{children}</h4>,
-                      h5: ({children}) => <h5 className="text-base font-bold mt-2 mb-1 text-base-content">{children}</h5>,
-                      h6: ({children}) => <h6 className="text-sm font-bold mt-2 mb-1 text-base-content">{children}</h6>,
-                      p: ({children}) => <p className="mb-4 text-base-content leading-relaxed">{children}</p>,
-                      ul: ({children}) => <ul className="list-disc list-inside mb-4 ml-4 text-base-content">{children}</ul>,
-                      ol: ({children}) => <ol className="list-decimal list-inside mb-4 ml-4 text-base-content">{children}</ol>,
-                      li: ({children}) => <li className="mb-1">{children}</li>,
-                      a: ({href, children}) => <a href={href} className="text-primary hover:underline">{children}</a>,
-                      blockquote: ({children}) => <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-base-content/80">{children}</blockquote>,
-                      code: ({children, className}) => {
+                      h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4 text-base-content">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-2xl font-bold mt-6 mb-3 text-base-content">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-xl font-bold mt-4 mb-2 text-base-content">{children}</h3>,
+                      h4: ({ children }) => <h4 className="text-lg font-bold mt-3 mb-2 text-base-content">{children}</h4>,
+                      h5: ({ children }) => <h5 className="text-base font-bold mt-2 mb-1 text-base-content">{children}</h5>,
+                      h6: ({ children }) => <h6 className="text-sm font-bold mt-2 mb-1 text-base-content">{children}</h6>,
+                      p: ({ children }) => <p className="mb-4 text-base-content leading-relaxed">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc list-inside mb-4 ml-4 text-base-content">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside mb-4 ml-4 text-base-content">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      a: ({ href, children }) => <a href={href} className="text-primary hover:underline">{children}</a>,
+                      blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-base-content/80">{children}</blockquote>,
+                      code: ({ children, className }) => {
                         const isInline = !className;
-                        return isInline ? 
+                        return isInline ?
                           <code className="bg-base-300 px-1 py-0.5 rounded text-sm font-mono text-base-content">{children}</code> :
                           <code className={className}>{children}</code>
                       },
-                      pre: ({children}) => <pre className="bg-base-300 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>,
-                      table: ({children}) => <div className="overflow-x-auto mb-4"><table className="table table-zebra w-full">{children}</table></div>,
-                      thead: ({children}) => <thead>{children}</thead>,
-                      tbody: ({children}) => <tbody>{children}</tbody>,
-                      tr: ({children}) => <tr>{children}</tr>,
-                      th: ({children}) => <th className="text-base-content font-bold">{children}</th>,
-                      td: ({children}) => <td className="text-base-content">{children}</td>,
+                      pre: ({ children }) => <pre className="bg-base-300 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>,
+                      table: ({ children }) => <div className="overflow-x-auto mb-4"><table className="table table-zebra w-full">{children}</table></div>,
+                      thead: ({ children }) => <thead>{children}</thead>,
+                      tbody: ({ children }) => <tbody>{children}</tbody>,
+                      tr: ({ children }) => <tr>{children}</tr>,
+                      th: ({ children }) => <th className="text-base-content font-bold">{children}</th>,
+                      td: ({ children }) => <td className="text-base-content">{children}</td>,
                       hr: () => <hr className="border-base-300 my-8" />,
-                      strong: ({children}) => <strong className="font-bold text-base-content">{children}</strong>,
-                      em: ({children}) => <em className="italic text-base-content">{children}</em>,
-                      img: ({src, alt}) => <img src={src} alt={alt} className="max-w-full h-auto rounded-lg my-4" />
+                      strong: ({ children }) => <strong className="font-bold text-base-content">{children}</strong>,
+                      em: ({ children }) => <em className="italic text-base-content">{children}</em>,
+                      img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-lg my-4" />
                     }}
                   >
                     {content}

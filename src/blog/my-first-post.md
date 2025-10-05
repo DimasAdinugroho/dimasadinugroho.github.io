@@ -1,195 +1,88 @@
 ---
-title: Complete Markdown Syntax Guide
-date: 2024-01-15
-excerpt: A comprehensive example showcasing all markdown syntax features including headings, tables, code blocks, formulas, and more.
+title: Prevent API Overload: A Comprehensive Guide to Rate Limiting with Bottleneck
+date: 15 Oct, 2025
+excerpt: A practical guide to managing API rate limits using the Bottleneck library in Node.js
+tags: nodejs, api, rate-limiting, bottleneck, javascript
 ---
 
-# Complete Markdown Syntax Guide
+In the realm of modern web development, APIs have become the lifeblood of our applications. They enable us to tap into a vast array of external services and data sources, empowering us to build rich and powerful experiences. However, with great power comes great responsibility – and in this case, that responsibility lies in respecting the rate limits imposed by API providers.
 
-This post demonstrates all the major markdown syntax features you can use in your blog posts.
+Rate limits are necessary measures put in place to prevent abuse and maintain the performance of APIs. Exceeding these limits can lead to rate limit errors, which can bring your application to a screeching halt, disrupting functionality and leaving your users high and dry. To address this challenge, there is a powerful solution at our disposal: the Bottleneck package.
 
-## Headings
+## Introducing Bottleneck: Your Rate Limiting Gatekeeper
+The Bottleneck package is a rate limiter that enforces a maximum number of operations within a given time period. It acts as a gatekeeper, ensuring that your application does not overwhelm the target API with too many requests, thereby preventing rate limit errors and maintaining a smooth and reliable experience for your users.
 
-# H1 Heading
-## H2 Heading
-### H3 Heading
-#### H4 Heading
-##### H5 Heading
-###### H6 Heading
-
-## Text Formatting
-
-**Bold text** and __also bold__
-
-*Italic text* and _also italic_
-
-***Bold and italic*** and ___also bold and italic___
-
-~~Strikethrough text~~
-
-## Lists
-
-### Unordered Lists
-- Item 1
-- Item 2
-  - Nested item 2.1
-  - Nested item 2.2
-    - Deep nested item
-- Item 3
-
-### Ordered Lists
-1. First item
-2. Second item
-   1. Nested numbered item
-   2. Another nested item
-3. Third item
-
-### Task Lists
-- [x] Completed task
-- [ ] Incomplete task
-- [x] Another completed task
-
-## Links and Images
-
-[Link to Google](https://google.com)
-
-[Link with title](https://github.com "GitHub Homepage")
-
-![Alt text for image](https://via.placeholder.com/300x200/4A90E2/FFFFFF?text=Sample+Image)
-
-## Code
-
-### Inline Code
-Use `console.log()` to print output in JavaScript.
-
-### Code Blocks
+Installing Bottleneck is as simple as running npm install bottleneck in your project directory. Once installed, you can create a new limiter instance like so:
 
 ```javascript
-// JavaScript example
-function greetUser(name) {
-  console.log(`Hello, ${name}!`);
-  return `Welcome to my blog, ${name}`;
+const Bottleneck = require("bottleneck");
+// Create a new limiter with a maximum of 1 concurrent requests
+// and a limit of 10 requests per minute
+const limiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 6000 // 6000ms = 1 minute / 10 requests
+});
+```
+
+In this example, we've created a limiter that allows a maximum of 1 concurrent requests and enforces a limit of 10 requests per minute. The maxConcurrent option specifies the maximum number of concurrent requests allowed, while the minTime option defines the minimum time (in milliseconds) between requests.
+
+Scheduling API Requests with Bottleneck
+With your limiter configured, you can start scheduling API requests using the schedule method. Here's an example:
+
+
+async function makeRequest() {
+  try {
+    const response = await axios.get('https://api.example.com/data');
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
 }
+// Schedule 20 requests
+for (let i = 0; i < 20; i++) {
+  limiter.schedule(makeRequest);
+}
+In this case, we've defined a makeRequest function that simulates an API request. We then schedule 20 requests using the limiter.schedule method. Bottleneck will automatically queue and execute these requests according to the specified rate limit, ensuring that we stay within the boundaries set by the API provider.
 
-const user = "Developer";
-greetUser(user);
-```
+Customizing Rate Limiting Behavior
+One of the significant advantages of the Bottleneck package is its flexibility. It provides various options to customize the rate limiting behavior according to your application's needs. For instance, you can configure different rate limits based on priorities, handle errors gracefully, and even implement dynamic rate limiting strategies.
 
-```python
-# Python example
-def calculate_fibonacci(n):
-    if n <= 1:
-        return n
-    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+Here's an example of how you can handle errors and configure different rate limits based on priorities:
 
-# Generate first 10 Fibonacci numbers
-for i in range(10):
-    print(f"F({i}) = {calculate_fibonacci(i)}")
-```
 
-```bash
-# Bash commands
-npm install react-markdown
-git add .
-git commit -m "Add markdown blog support"
-git push origin main
-```
+const Bottleneck = require("bottleneck");
+// Create a new limiter with various options
+const limiter = new Bottleneck({
+  maxConcurrent: 5,
+  minTime: 6000,
+  reservoir: 10, // Initial reservoir size
+  reservoirRefreshAmount: 10, // Number of tokens to add to the reservoir
+  reservoirRefreshInterval: 60 * 1000 // Interval to refill the reservoir (1 minute)
+});
+// Configure error handling
+limiter.on("failed", async (error, jobInfo) => {
+  // Handle failed requests
+  console.error(`Request failed: ${error.message}`);
+});
+// Define priority levels
+const priorities = {
+  high: 5,
+  normal: 3,
+  low: 1
+};
+// Schedule a high-priority request
+limiter.schedule({ priority: priorities.high }, makeRequest);
+// Schedule a normal-priority request
+limiter.schedule({ priority: priorities.normal }, makeRequest);
+In this example, we've configured the limiter with an initial reservoir size of 10 requests, refilling 10 tokens every minute. We've also set up error handling by listening to the failed event, which allows us to handle failed requests gracefully.
 
-## Tables
+Additionally, we've defined priority levels (high, normal, and low) and scheduled requests with different priorities using the limiter.schedule method. The Bottleneck package will prioritize higher-priority requests over lower-priority ones, ensuring that critical requests are processed first.
 
-| Feature | Supported | Notes |
-|---------|-----------|-------|
-| Headers | ✅ | H1-H6 supported |
-| Tables | ✅ | With alignment |
-| Code blocks | ✅ | Syntax highlighting |
-| Math formulas | ⚠️ | Depends on renderer |
-| Images | ✅ | Local and remote |
+Best Practices and Final Thoughts
+When working with the Bottleneck package, it's essential to follow best practices to ensure optimal performance and reliability. Here are a few tips:
 
-### Table with Alignment
-
-| Left Aligned | Center Aligned | Right Aligned |
-|:-------------|:--------------:|--------------:|
-| Left | Center | Right |
-| Text | Text | Text |
-| More content | More content | More content |
-
-## Blockquotes
-
-> This is a simple blockquote.
-
-> This is a blockquote with multiple paragraphs.
->
-> This is the second paragraph in the blockquote.
-
-> ### Blockquote with heading
-> 
-> This blockquote contains a heading and other elements.
-> 
-> - List item in blockquote
-> - Another item
-
-## Horizontal Rules
-
----
-
-***
-
-___
-
-## Math Formulas (if supported)
-
-Inline math: $E = mc^2$
-
-Block math:
-$$
-\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
-$$
-
-$$
-f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
-$$
-
-## HTML Elements
-
-You can also use HTML directly:
-
-<details>
-<summary>Click to expand</summary>
-
-This content is hidden by default and can be expanded by clicking the summary.
-
-</details>
-
-<kbd>Ctrl</kbd> + <kbd>C</kbd> to copy
-
-<mark>Highlighted text</mark>
-
-## Escape Characters
-
-Use backslash to escape special characters:
-
-\*Not italic\*
-
-\`Not code\`
-
-\# Not a heading
-
-## Line Breaks
-
-This is the first line.  
-This is the second line (two spaces at end of previous line).
-
-This is a new paragraph.
-
-## Footnotes
-
-Here's a sentence with a footnote[^1].
-
-Another footnote reference[^note].
-
-[^1]: This is the first footnote.
-[^note]: This is another footnote with a custom identifier.
-
----
-
-This covers most of the standard markdown syntax. Your blog now supports rich content formatting!
+Monitor your rate limit usage and adjust your limiter settings accordingly to avoid hitting rate limits.
+Implement retry strategies for failed requests to improve resilience.
+Cache API responses when possible to reduce the number of requests made.
+Consider implementing circuit breakers to prevent cascading failures.
+By leveraging the power of the Bottleneck package, you can effectively manage API rate limits, prevent rate limit errors, and maintain a reliable and performant application. Its flexibility and extensive configuration options make it a valuable tool in any Node.js developer's arsenal.

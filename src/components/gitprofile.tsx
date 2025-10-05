@@ -26,6 +26,7 @@ import { GithubProject } from '../interfaces/github-project';
 import GithubProjectCard from './github-project-card';
 import ExternalProjectCard from './external-project-card';
 import BlogCard from './blog-card';
+import LocalBlogCard from './local-blog-card';
 import Footer from './footer';
 import PublicationCard from './publication-card';
 
@@ -271,6 +272,10 @@ const GitProfile = ({ config }: { config: Config }) => {
                       blog={sanitizedConfig.blog}
                     />
                   )}
+                  <LocalBlogCard
+                    loading={loading}
+                    googleAnalyticsId={sanitizedConfig.googleAnalytics.id}
+                  />
                 </div>
               </div>
             </div>
