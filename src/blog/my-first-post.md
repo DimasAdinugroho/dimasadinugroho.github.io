@@ -50,7 +50,7 @@ One of the significant advantages of the Bottleneck package is its flexibility. 
 
 Here's an example of how you can handle errors and configure different rate limits based on priorities:
 
-```
+```bash
 const Bottleneck = require("bottleneck");
 // Create a new limiter with various options
 const limiter = new Bottleneck({
