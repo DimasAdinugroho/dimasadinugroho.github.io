@@ -13,7 +13,6 @@ interface BlogPost {
 
 const LocalBlogCard = ({
   loading,
-  googleAnalyticsId,
 }: {
   loading: boolean;
   googleAnalyticsId?: string;

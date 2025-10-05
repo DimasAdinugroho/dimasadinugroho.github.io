@@ -28,7 +28,7 @@ const BlogList = () => {
         const frontmatter = extractFrontmatter(content);
         const tags = frontmatter.tags ? frontmatter.tags.split(',').map((tag: string) => tag.trim()) : [];
 
-        tags.forEach(tag => tagSet.add(tag));
+        tags.forEach((tag: string) => tagSet.add(tag));
 
         posts.push({
           slug,
